@@ -23,15 +23,16 @@ class MusicItemCell: UICollectionViewCell, CollectionViewCellCustomizing {
 
     private let musicItemStateChangeObserverId = UUID()
     
-//    private var imageLoadingState: ImageLoadingState = .awaited
+    private var artworkLoadingTask: NetworkTaskable?
+    private var artworkLoadingState: ArtworkImageLoadingState = .awaited
     private weak var viewModel: MusicItemViewModel?
 
     private let artworkThumbnail: UIImageView = {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = 10
         imageView.clipsToBounds = true
-//        imageView.image = ImageLoadingState.awaited.image
+        imageView.image = ArtworkImageLoadingState.awaited.image
         imageView.backgroundColor = Theme.previewThumbnailBackgroundColor
         imageView.isUserInteractionEnabled = true
         return imageView
@@ -236,11 +237,37 @@ class MusicItemCell: UICollectionViewCell, CollectionViewCellCustomizing {
     }
     
     private func setPreviewThumbnail() {
-        // TODO: Implement image loader
+        
+        /// Cancel any already loading task
+        if let artworkLoadingTask {
+            artworkLoadingTask.cancel()
+        }
+       
         if let viewModel {
-            
+            let musicId = viewModel.music.id
+            self.artworkLoadingTask = viewModel.loadArtworkImage(in: .low) { [weak self, musicId] result in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    guard let viewModel = self.viewModel else { return }
+                    guard viewModel.music.id == musicId else { return } /// - Note cases where cell was recycled for another task, ignore old image load
+                    
+                    switch result {
+                    case .success(let image):
+                        self.artworkLoadingState = .loaded(image: image)
+                    case .failure(let error):
+                        self.artworkLoadingState = .failed
+                        debugPrint("Artwork loading failed for music: \(viewModel.music.name) reason: \(error)")
+                    }
+                    
+                    self.artworkThumbnail.image = self.artworkLoadingState.image
+                    self.artworkThumbnail.tintColor = self.artworkLoadingState.tintColor
+                }
+            }
         } else {
-
+            self.artworkLoadingTask = nil
+            self.artworkLoadingState = .awaited
+            self.artworkThumbnail.image = artworkLoadingState.image
+            self.artworkThumbnail.tintColor = artworkLoadingState.tintColor
         }
     }
     

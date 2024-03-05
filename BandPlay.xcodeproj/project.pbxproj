@@ -10,6 +10,8 @@
 		890F8FA42B793E540086A5A1 /* MusicDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890F8FA32B793E540086A5A1 /* MusicDetailsViewController.swift */; };
 		890F8FAA2B7961D00086A5A1 /* Date+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890F8FA92B7961D00086A5A1 /* Date+Ext.swift */; };
 		890F8FAC2B799FB40086A5A1 /* FileSize+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 890F8FAB2B799FB40086A5A1 /* FileSize+Ext.swift */; };
+		892D1B042B96F26C00B9A941 /* ArtworkImageLoaderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892D1B032B96F26C00B9A941 /* ArtworkImageLoaderService.swift */; };
+		892D1B062B9704C700B9A941 /* ArtworkImageLoadingState+Ext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 892D1B052B9704C700B9A941 /* ArtworkImageLoadingState+Ext.swift */; };
 		896D61932B77E5040001F858 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896D61922B77E5040001F858 /* Config.swift */; };
 		896D61962B77E67C0001F858 /* MusicPlayListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896D61952B77E67C0001F858 /* MusicPlayListViewModel.swift */; };
 		896D61992B77EA0A0001F858 /* ResourceDownloaderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 896D61982B77EA0A0001F858 /* ResourceDownloaderService.swift */; };
@@ -64,6 +66,8 @@
 		890F8FA32B793E540086A5A1 /* MusicDetailsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicDetailsViewController.swift; sourceTree = "<group>"; };
 		890F8FA92B7961D00086A5A1 /* Date+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Ext.swift"; sourceTree = "<group>"; };
 		890F8FAB2B799FB40086A5A1 /* FileSize+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileSize+Ext.swift"; sourceTree = "<group>"; };
+		892D1B032B96F26C00B9A941 /* ArtworkImageLoaderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkImageLoaderService.swift; sourceTree = "<group>"; };
+		892D1B052B9704C700B9A941 /* ArtworkImageLoadingState+Ext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ArtworkImageLoadingState+Ext.swift"; sourceTree = "<group>"; };
 		896D61922B77E5040001F858 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		896D61952B77E67C0001F858 /* MusicPlayListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayListViewModel.swift; sourceTree = "<group>"; };
 		896D61982B77EA0A0001F858 /* ResourceDownloaderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceDownloaderService.swift; sourceTree = "<group>"; };
@@ -118,6 +122,13 @@
 				890F8FA32B793E540086A5A1 /* MusicDetailsViewController.swift */,
 			);
 			path = MusicDetails;
+			sourceTree = "<group>";
+		};
+		892D1B022B96F25700B9A941 /* Mocking */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Mocking;
 			sourceTree = "<group>";
 		};
 		896D61942B77E6450001F858 /* MusicPlayList */ = {
@@ -217,6 +228,7 @@
 		898FFDE82B77440600033510 /* Downloading */ = {
 			isa = PBXGroup;
 			children = (
+				892D1B032B96F26C00B9A941 /* ArtworkImageLoaderService.swift */,
 				896D61982B77EA0A0001F858 /* ResourceDownloaderService.swift */,
 			);
 			path = Downloading;
@@ -225,6 +237,7 @@
 		898FFDF52B7799D700033510 /* Commons */ = {
 			isa = PBXGroup;
 			children = (
+				892D1B022B96F25700B9A941 /* Mocking */,
 				89CB7D8F2B95BFCE0055FFF1 /* Extensions */,
 				89CB7D8E2B95BFAC0055FFF1 /* UI */,
 				898FFDE92B77441F00033510 /* BandPlayFileManager.swift */,
@@ -245,6 +258,7 @@
 				896D61A02B78B0CF0001F858 /* CollectionView+Ext.swift */,
 				896D61A42B7903FE0001F858 /* PaddedLabel.swift */,
 				89CB7D8C2B95BF990055FFF1 /* DiskProgressView.swift */,
+				892D1B052B9704C700B9A941 /* ArtworkImageLoadingState+Ext.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -340,6 +354,7 @@
 				890F8FAA2B7961D00086A5A1 /* Date+Ext.swift in Sources */,
 				898FFDEA2B77441F00033510 /* BandPlayFileManager.swift in Sources */,
 				897549822B932B7000A38D4C /* ServicesAssembly.swift in Sources */,
+				892D1B062B9704C700B9A941 /* ArtworkImageLoadingState+Ext.swift in Sources */,
 				896D61A52B7903FE0001F858 /* PaddedLabel.swift in Sources */,
 				896D61A72B79217E0001F858 /* AlertPresentable.swift in Sources */,
 				8975497B2B93208900A38D4C /* MusicPlayList.swift in Sources */,
@@ -348,6 +363,7 @@
 				89CB7D952B9671A40055FFF1 /* NetworkTaskable.swift in Sources */,
 				896D61962B77E67C0001F858 /* MusicPlayListViewModel.swift in Sources */,
 				89CB7D8D2B95BF990055FFF1 /* DiskProgressView.swift in Sources */,
+				892D1B042B96F26C00B9A941 /* ArtworkImageLoaderService.swift in Sources */,
 				897549712B930EC300A38D4C /* MusicPlayListZeroStateView.swift in Sources */,
 				89CB7D912B96120F0055FFF1 /* Broadcaster.swift in Sources */,
 				896D61992B77EA0A0001F858 /* ResourceDownloaderService.swift in Sources */,

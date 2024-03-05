@@ -46,13 +46,16 @@ class MusicItemViewModel {
     var onStateChangeBroadcaster: Broadcaster<StateChange>
     
     private let resourceDownloaderService: ResourceDownloaderServicible
+    private let artworkImageLoaderService: ArtworkImageLoaderServicible
     weak var fileManager: BandPlayFileManager?
     private var downloadTrackerHandle: ResourceDownloaderService.TrackerHandle?
     
     init(music: Music,
          resourceDownloaderService: ResourceDownloaderServicible,
+                  artworkImageLoaderService: ArtworkImageLoaderServicible,
          fileManager: BandPlayFileManager,
          onActionTrigger: @escaping UITriggerAction) {
+        self.artworkImageLoaderService = artworkImageLoaderService
         self.fileManager = fileManager
         self.actionTriggered = onActionTrigger
         self.music = MusicAsset(model: music)
@@ -173,5 +176,11 @@ class MusicItemViewModel {
     func updateMusic(downloadedLocalFileURL: URL, with duration: Double) {
         self.music.setDownloaded(localFileURL: downloadedLocalFileURL, with: duration)
         self.onStateChangeBroadcaster.broadcast(.statusChanged)
+    }
+    
+    func loadArtworkImage(in resolution: ArtworkImageResolution,
+                          onLoaded: @escaping ArtworkImageLoadingResult) -> NetworkTaskable {
+        let musicId = music.id
+        return artworkImageLoaderService.loadArtworkImage(for: musicId, in: resolution, onLoaded: onLoaded)
     }
 }

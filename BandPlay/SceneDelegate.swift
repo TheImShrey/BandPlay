@@ -17,8 +17,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let windowScene = (scene as? UIWindowScene) else { return }
-        let musicPlayListViewController = MusicPlayListViewController(environment: AppDelegate.current.environment, 
-                                                                      musicPlayListService: AppDelegate.current.servicesAssembly.musicPlayListService)
+        let environment = AppDelegate.current.environment
+        let servicesAssembly = AppDelegate.current.servicesAssembly
+        let musicPlayListViewController = MusicPlayListViewController(environment: environment,
+                                                                      musicPlayListService: servicesAssembly.musicPlayListService,
+                                                                      artworkImageLoaderService: servicesAssembly.artworkImageLoaderService)
         let navigationController = UINavigationController(rootViewController: musicPlayListViewController)
         let window = UIWindow(windowScene: windowScene)
         window.rootViewController = navigationController
