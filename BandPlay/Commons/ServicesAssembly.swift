@@ -9,5 +9,6 @@ import Foundation
 
 struct ServicesAssembly {
     let musicPlayListService: MusicPlayListServicible
+    let artworkImageLoaderService: ArtworkImageLoaderServicible
     let sharedResourceDownloaderService: ResourceDownloaderServicible
 }

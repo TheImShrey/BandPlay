@@ -33,10 +33,12 @@ class MusicPlayListViewController: UIViewController, AlertPresentable {
     }()
 
     init(environment: Environment,
-         musicPlayListService: MusicPlayListServicible) {
+         musicPlayListService: MusicPlayListServicible,
+                  artworkImageLoaderService: ArtworkImageLoaderServicible) {
         
         self.viewModel = MusicPlayListViewModel(environment: environment,
-                                                musicPlayListService: musicPlayListService)
+                                                musicPlayListService: musicPlayListService,
+                                                         artworkImageLoaderService: artworkImageLoaderService)
         super.init(nibName: nil, bundle: nil)
         
         self.viewModel.onStateChange = { [weak self] in self?.handle(stateChange: $0)}

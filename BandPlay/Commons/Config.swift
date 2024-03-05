@@ -32,4 +32,5 @@ enum FileTypes: String {
 enum AppError: Error {
     case somethingWentWrong
     case invalidMusicFile
+    case invalidImageFile
 }

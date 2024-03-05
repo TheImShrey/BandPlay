@@ -16,7 +16,7 @@ protocol ResourceDownloaderServicible: AnyObject {
                           onDownload: @escaping ResourceLoadingResult) -> ResourceDownloaderService.TrackerHandle
 }
 
-class ResourceDownloaderService {
+final class ResourceDownloaderService {
     
     enum Progress {
         case inProgress(Double)

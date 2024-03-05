@@ -35,9 +35,10 @@ class MusicDetailsViewController: UIViewController, AlertPresentable {
 
     private let artworkThumbnail: UIImageView = {
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleAspectFit
         imageView.layer.cornerRadius = Metrics.standardCornerRadius
         imageView.clipsToBounds = true
+        imageView.image = ArtworkImageLoadingState.awaited.image
         imageView.backgroundColor = Theme.previewThumbnailBackgroundColor
         return imageView
     }()
@@ -114,6 +115,7 @@ class MusicDetailsViewController: UIViewController, AlertPresentable {
         return view
     }()
 
+    private var artworkLoadingTask: NetworkTaskable?
     /// - Note We follow single source of truth principle, so we don't update the music Item here.
     let musicItem: MusicItemViewModel
     var currentControlActionType: MusicItemViewModel.ActionType?
@@ -127,6 +129,7 @@ class MusicDetailsViewController: UIViewController, AlertPresentable {
     }
     
     deinit {
+        self.artworkLoadingTask?.cancel()
         self.musicItem.onStateChangeBroadcaster.removeObserver(with: self.musicItemStateChangeObserverId)
     }
 
@@ -231,7 +234,25 @@ class MusicDetailsViewController: UIViewController, AlertPresentable {
     }
         
     private func setPreviewThumbnail() {
-        // TODO: Implement image loader
+        if let artworkLoadingTask {
+            artworkLoadingTask.cancel()
+        }
+        
+        artworkLoadingTask = musicItem.loadArtworkImage(in: .hd) { [weak self] result in
+            DispatchQueue.main.async {
+                let artworkLoadingState: ArtworkImageLoadingState
+                switch result {
+                case .success(let image):
+                    artworkLoadingState = .loaded(image: image)
+                case .failure(let error):
+                    artworkLoadingState = .failed
+                    debugPrint("Artwork loading failed for muisc: \(self?.musicItem.music.name) reason: \(error)")
+                }
+                
+                self?.artworkThumbnail.image = artworkLoadingState.image
+                self?.artworkThumbnail.tintColor = artworkLoadingState.tintColor
+            }
+        }
     }
    
     private func setFileName() {

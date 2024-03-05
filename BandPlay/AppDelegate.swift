@@ -43,8 +43,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, AppManager {
         let musicPlayListService = MusicPlayListService(environment: environment)
         let resourceDownloaderService = ResourceDownloaderService(environment: environment)
         
+        /// - Note Since API does not provide artwork image URL, we are loading random images from `Picsum` mapped to each music id
+        let artworkImageLoaderService = MockArtworkImageLoaderService(environment: environment)
+        
         /// - Note This way you dependency inject services to entire app, and can easily mock them for testing, or have different services for different environments like `QA`, `DEBUG`, `RELEASE` etc
-        self.servicesAssembly = ServicesAssembly(musicPlayListService: musicPlayListService, sharedResourceDownloaderService: resourceDownloaderService)
+        self.servicesAssembly = ServicesAssembly(musicPlayListService: musicPlayListService,
+                                                 artworkImageLoaderService: artworkImageLoaderService,
+                                                 sharedResourceDownloaderService: resourceDownloaderService)
         self.environment = environment
         super.init()
     }

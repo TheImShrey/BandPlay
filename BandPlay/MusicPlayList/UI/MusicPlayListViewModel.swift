@@ -19,6 +19,7 @@ class MusicPlayListViewModel {
         case showGeneralError(String, Error)
     }
     
+    private let artworkImageLoaderService: ArtworkImageLoaderServicible
     private let musicPlayListService: MusicPlayListServicible
     private var fetchMusicPlayListTask: (any NetworkTaskable)?
     private let musicPlayer: AVPlayer
@@ -30,7 +31,9 @@ class MusicPlayListViewModel {
     var musicItemViewModels: [MusicItemViewModel]
     
     init(environment: Environment,
-         musicPlayListService: MusicPlayListServicible) {
+         musicPlayListService: MusicPlayListServicible,
+         artworkImageLoaderService: ArtworkImageLoaderServicible) {
+        self.artworkImageLoaderService = artworkImageLoaderService
         self.musicPlayListService = musicPlayListService
         self.musicItemViewModels = []
         self.environment = environment
@@ -76,7 +79,8 @@ class MusicPlayListViewModel {
         let resourceDownloaderService = ResourceDownloaderService(environment: self.environment)
         let musicItemViewModel = MusicItemViewModel(music: music,
                                                     resourceDownloaderService: resourceDownloaderService,
-                                                    fileManager: environment.fileManager,
+                                                    artworkImageLoaderService: self.artworkImageLoaderService,
+                                                    fileManager: self.environment.fileManager,
                                                     onActionTrigger: onActionTrigger)
         
         return musicItemViewModel
