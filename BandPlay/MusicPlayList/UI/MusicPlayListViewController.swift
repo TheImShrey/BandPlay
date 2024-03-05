@@ -84,7 +84,9 @@ class MusicPlayListViewController: UIViewController, AlertPresentable {
         view.addSubview(musicPlayListView)
 
         musicPlayListView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.horizontalEdges.equalTo(view.safeAreaLayoutGuide.snp.horizontalEdges)
+            make.bottom.equalTo(view.snp.bottom)
         }
     }
 
