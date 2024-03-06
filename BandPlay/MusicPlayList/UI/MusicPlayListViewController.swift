@@ -68,26 +68,41 @@ class MusicPlayListViewController: UIViewController, AlertPresentable {
         navigationItem.rightBarButtonItem = UIBarButtonItem(image: Theme.refreshIcon,
                                                             style: .plain,
                                                             target: self,
-                                                            action: #selector(refreshButtonTapped))
+                                                            action: #selector(self.refreshButtonTapped))
         navigationItem.title = "Band Play"
-        setupConstraints()
-
-        musicPlayListView.emptyStateView = emptyStateView
+       
+        view.addSubview(self.musicPlayListView)
+        self.musicPlayListView.emptyStateView = emptyStateView
         
-        let refreshGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(refreshButtonTapped))
-        emptyStateView.addGestureRecognizer(refreshGestureRecognizer)
+        self.setupConstraints()
+        
+        self.setupActions()
 
         self.musicPlayListView.dataSource = self
     }
     
     func setupConstraints() {
-        view.addSubview(musicPlayListView)
-
         musicPlayListView.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             make.horizontalEdges.equalTo(view.safeAreaLayoutGuide.snp.horizontalEdges)
             make.bottom.equalTo(view.snp.bottom)
         }
+    }
+    
+    func setupActions() {
+        let refreshGestureRecognizer = UITapGestureRecognizer(target: self,
+                                                              action: #selector(refreshButtonTapped))
+        emptyStateView.addGestureRecognizer(refreshGestureRecognizer)
+        
+        NotificationCenter.default.addObserver(self, 
+                                               selector: #selector(appDidEnterBackground),
+                                               name: UIScene.didEnterBackgroundNotification,
+                                               object: nil)
+    }
+    
+    @objc
+    func appDidEnterBackground() {
+        viewModel.onAppDidEnterBackground()
     }
 
     @objc

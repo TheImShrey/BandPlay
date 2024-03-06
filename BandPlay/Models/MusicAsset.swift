@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftData
 import UIKit
 
 class MusicAsset {
@@ -32,7 +33,6 @@ class MusicAsset {
     
     let model: Music
     private(set) var localFileURL: URL?
-    private(set) var artworkThumbnailURL: URL?
     private(set) var duration: Double
     private(set) var status: Status
     
@@ -44,20 +44,15 @@ class MusicAsset {
         return model.name
     }
     
-    init(model: Music, duration: Double = 0.0, localFileURL: URL? = nil, artworkThumbnailURL: URL? = nil) {
+    init(model: Music, duration: Double = 0.0, localFileURL: URL? = nil) {
         self.model = model
         self.status = localFileURL != nil ? .ready : .pending
         self.localFileURL = localFileURL
-        self.artworkThumbnailURL = artworkThumbnailURL
         self.duration = duration
     }
     
     func set(status: Status) {
         self.status = status
-    }
-    
-    func set(artworkThumbnailURL: URL) {
-        self.artworkThumbnailURL = artworkThumbnailURL
     }
     
     func setDownloaded(localFileURL: URL, with duration: Double) {

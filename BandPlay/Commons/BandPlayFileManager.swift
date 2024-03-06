@@ -7,13 +7,21 @@
 
 import Foundation
 
-class BandPlayFileManager: FileManager {
+final class BandPlayFileManager: FileManager {
     var documentsDirectoryURL: URL {
         return self.urls(for: .documentDirectory, in: .userDomainMask).first ?? URL.documentsDirectory
     }
     
     var privateDirectoryURL: URL {
         return self.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? URL.applicationSupportDirectory
+    }
+    
+    var persistentStorageDirectoryURL: URL {
+        return self.privateDirectoryURL.appending(component: "PersistentStorage")
+    }
+    
+    var musicAudioStorageDirectoryURL: URL {
+        return self.privateDirectoryURL.appending(component: "Audio Storage")
     }
     
     func deleteItemIfExists(at url: URL) throws {
@@ -67,11 +75,19 @@ class BandPlayFileManager: FileManager {
     
     override init() {
         super.init()
-        // MARK: Enable Debugging
-        try? contentsOfDirectory(atPath: documentsDirectoryURL.path(percentEncoded: false)).forEach { item in
-            try? removeItem(atPath: documentsDirectoryURL.appending(path: item).path(percentEncoded: false))
-        }
+        
+        /// Deletion of PersistentStorage and Audio Storage depending on debug scenario
+        let directoriesToDelete: [String] = [
+///           - Warning Only enable for debugging:
+//            self.persistentStorageDirectoryURL.lastPathComponent,
+//            self.musicAudioStorageDirectoryURL.lastPathComponent
+        ]
+        
         try? contentsOfDirectory(atPath: privateDirectoryURL.path(percentEncoded: false)).forEach { item in
+           
+            guard directoriesToDelete.contains(item) else { return }
+            
+            debugPrint("Deleting: private\(item)")
             try? removeItem(atPath: privateDirectoryURL.appending(path: item).path(percentEncoded: false))
         }
     }
