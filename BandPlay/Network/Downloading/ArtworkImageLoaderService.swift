@@ -7,8 +7,9 @@
 
 import Foundation
 import UIKit
+import SwiftData
 
-typealias ArtworkImageLoadingResult = ((Result<UIImage, Error>) -> (Void))
+typealias ArtworkImageLoadingResult = ((ArtworkImageLoadingState) -> (Void))
 
 enum ArtworkImageResolution: Int {
     case low = 108
@@ -19,7 +20,7 @@ enum ArtworkImageResolution: Int {
 enum ArtworkImageLoadingState {
     case awaited
     case loaded(image: UIImage)
-    case failed
+    case failed(error: Error)
 }
 
 protocol ArtworkImageLoaderServicible {
@@ -37,23 +38,22 @@ final class MockArtworkImageLoaderService {
         static let initialSeed = 1050
     }
     
-    /// - Note In Memory Mocked Cache for loaded images, ideally this should be a disk cache
+    enum Errors: Error {
+        case cacheMiss
+    }
+    
+    private let environment: Environment
     private var mockIdAndURLMapping: [String: URL]
-    private let urlCache: URLCache
     private var seed: Int
     private let networkSession: URLSession
     private let id = UUID()
     
     init(environment: Environment) {
+        self.environment = environment
         self.mockIdAndURLMapping = [:]
-        let urlCache = URLCache(memoryCapacity: Constants.memoryCapacity,
-                                diskCapacity: Constants.diskCapacity,
-                                diskPath: "\(Constants.cacheDirectoryBaseName)-\(id.uuidString)")
-        self.urlCache = urlCache
         
         let configuration = environment.defaultNetworkConfiguration
         configuration.requestCachePolicy = .returnCacheDataElseLoad
-        configuration.urlCache = urlCache
         configuration.timeoutIntervalForRequest = Constants.requestTimeoutInterval
         self.seed = Constants.initialSeed
         
@@ -88,32 +88,63 @@ extension MockArtworkImageLoaderService: ArtworkImageLoaderServicible {
         
         let downloadRequest = URLRequest(url: imageURLForResolution)
         
-        if let response = urlCache.cachedResponse(for: downloadRequest),
-           let image = UIImage(data: response.data) {
-            onLoaded(.success(image))
-            return NoopTask()
-        }
-        
-        let loadingTask = networkSession.dataTask(with: downloadRequest) { [weak self, downloadRequest] (data, response, error) in
+        let loadingTask = networkSession.dataTask(with: downloadRequest) { [weak self] (data, response, error) in
             if let error {
-                onLoaded(.failure(error))
+                onLoaded(.failed(error: error))
             } else if let data {
                 if let image = UIImage(data: data) {
-                    if let response {
-                        let cachedResponse = CachedURLResponse(response: response, data: data)
-                        self?.urlCache.storeCachedResponse(cachedResponse, for: downloadRequest)
+                    DispatchQueue.main.async {
+                        print(imageURLForResolution)
+                        self?.storeArtworkImageDataToPersistedStorage(data, having: imageURLForResolution)
                     }
                    
-                    onLoaded(.success(image))
+                    onLoaded(.loaded(image: image))
                 } else {
-                    onLoaded(.failure(AppError.invalidImageFile))
+                    onLoaded(.failed(error: AppError.invalidImageFile))
                 }
             } else {
-                onLoaded(.failure(AppError.somethingWentWrong))
+                onLoaded(.failed(error: AppError.somethingWentWrong))
             }
         }
         
-        loadingTask.resume()
+        DispatchQueue.main.async { [weak self, loadingTask] in
+            guard let self else { return }
+            
+            do {
+                let artworkImage = try self.retriveArtworkFromPersistedStorage(having: imageURLForResolution)
+                onLoaded(.loaded(image: artworkImage))
+                if loadingTask.state == .running {
+                    loadingTask.cancel()
+                }
+            } catch {
+                debugPrint("Artwork Cache miss musicId: (\(musicId)): \(error)")
+                if loadingTask.state == .suspended {
+                    loadingTask.resume()
+                }
+            }
+        }
+        
         return loadingTask
+    }
+}
+
+
+// MARK: - Caching Artwork Images
+extension MockArtworkImageLoaderService {
+    @MainActor private func retriveArtworkFromPersistedStorage(having url: URL) throws -> UIImage {
+        let artworkDataFetchDescriptor = FetchDescriptor<ArtworkImagePersistable>()
+        let persistanceContainer = self.environment.persistanceContainer
+        let persistedArtworkDatas = try persistanceContainer?.mainContext.fetch(artworkDataFetchDescriptor)
+        if let persistedArtworkData = persistedArtworkDatas?.first(where: { $0.url == url }),
+           let image = UIImage(data: persistedArtworkData.data) {
+            return image
+        } else {
+            throw Errors.cacheMiss
+        }
+    }
+    
+    @MainActor private func storeArtworkImageDataToPersistedStorage(_ data: Data, having url: URL) {
+        let artworkPersistableData = ArtworkImagePersistable(url: url, data: data)
+        self.environment.persistanceContainer?.mainContext.insert(artworkPersistableData)
     }
 }

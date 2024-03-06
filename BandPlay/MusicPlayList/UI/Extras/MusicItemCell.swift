@@ -245,20 +245,20 @@ class MusicItemCell: UICollectionViewCell, CollectionViewCellCustomizing {
        
         if let viewModel {
             let musicId = viewModel.music.id
-            self.artworkLoadingTask = viewModel.loadArtworkImage(in: .low) { [weak self, musicId] result in
+            self.artworkLoadingTask = viewModel.loadArtworkImage(in: .low) { [weak self, musicId] resultState in
                 DispatchQueue.main.async {
                     guard let self else { return }
                     guard let viewModel = self.viewModel else { return }
                     guard viewModel.music.id == musicId else { return } /// - Note cases where cell was recycled for another task, ignore old image load
                     
-                    switch result {
-                    case .success(let image):
-                        self.artworkLoadingState = .loaded(image: image)
-                    case .failure(let error):
-                        self.artworkLoadingState = .failed
-                        debugPrint("Artwork loading failed for music: \(viewModel.music.name) reason: \(error)")
+                    switch resultState {
+                    case .failed(let error):
+                        debugPrint("Artwork loading failed for music: \(viewModel.music.name) reason: \(error.localizedDescription)")
+                    default:
+                        break
                     }
                     
+                    self.artworkLoadingState = resultState
                     self.artworkThumbnail.image = self.artworkLoadingState.image
                     self.artworkThumbnail.tintColor = self.artworkLoadingState.tintColor
                 }

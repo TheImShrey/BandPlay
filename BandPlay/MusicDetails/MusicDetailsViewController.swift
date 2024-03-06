@@ -238,19 +238,17 @@ class MusicDetailsViewController: UIViewController, AlertPresentable {
             artworkLoadingTask.cancel()
         }
         
-        artworkLoadingTask = musicItem.loadArtworkImage(in: .hd) { [weak self] result in
+        artworkLoadingTask = musicItem.loadArtworkImage(in: .hd) { [weak self] resultState in
             DispatchQueue.main.async {
-                let artworkLoadingState: ArtworkImageLoadingState
-                switch result {
-                case .success(let image):
-                    artworkLoadingState = .loaded(image: image)
-                case .failure(let error):
-                    artworkLoadingState = .failed
+                switch resultState {
+                case .failed(let error):
                     debugPrint("Artwork loading failed for muisc: \(self?.musicItem.music.name) reason: \(error)")
+                default:
+                    break
                 }
                 
-                self?.artworkThumbnail.image = artworkLoadingState.image
-                self?.artworkThumbnail.tintColor = artworkLoadingState.tintColor
+                self?.artworkThumbnail.image = resultState.image
+                self?.artworkThumbnail.tintColor = resultState.tintColor
             }
         }
     }

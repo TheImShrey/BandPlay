@@ -7,6 +7,7 @@
 
 import Foundation
 import AVFoundation
+import SwiftData
 
 class MusicPlayListViewModel {
     typealias StateChangeTrigger = ((StateChanges) -> Void)
@@ -30,6 +31,7 @@ class MusicPlayListViewModel {
     let environment: Environment
     var musicItemViewModels: [MusicItemViewModel]
     
+    @MainActor
     init(environment: Environment,
          musicPlayListService: MusicPlayListServicible,
          artworkImageLoaderService: ArtworkImageLoaderServicible) {
@@ -48,9 +50,11 @@ class MusicPlayListViewModel {
             guard self?.musicPlayer.timeControlStatus == .paused else { return }
             self?.onMusicPlayBackPaused()
         }
+    
+        self.initialMusicPlayListSetup()
     }
     
-    private func createMusicItem(for music: Music) -> MusicItemViewModel {
+    private func createMusicItem(for music: MusicAsset) -> MusicItemViewModel {
         let newMusicId = music.id
         let onActionTrigger: MusicItemViewModel.UITriggerAction = { [weak self, newMusicId] action in
             guard let self,
@@ -87,21 +91,40 @@ class MusicPlayListViewModel {
     }
     
     private func resetPlaylist(with playList: MusicPlayList? = nil) {
+        let musics = playList?.musics ?? []
+        
+        let musicAssets = musics.map { music in
+            return MusicAsset(model: music)
+        }
+        
+        self.resetPlaylist(with: musicAssets)
+    }
+    
+    private func resetPlaylist(with musicItems: [MusicAsset]) {
         if let currentlyPlayedMusicItem {
             self.pauseMusic(for: currentlyPlayedMusicItem)
         }
         
-        let musics = playList?.musics ?? []
-        
-        self.musicItemViewModels = musics.map { music in
-            return self.createMusicItem(for: music)
+        let oldMusicItems = self.musicItemViewModels
+        self.musicItemViewModels = musicItems.map { musicAsset in
+            if let existingMusicItem = oldMusicItems.first(where: { $0.music.model == musicAsset.model }) {
+                return existingMusicItem
+            } else {
+                return self.createMusicItem(for: musicAsset)
+            }
         }
         
         self.onStateChange?(.reloadAll)
     }
     
+    @MainActor
+    private func initialMusicPlayListSetup() {
+        self.setupWithPersistedMusicItems()
+        self.fetchMusicPlayList()
+    }
+    
     func fetchMusicPlayList() {
-        fetchMusicPlayListTask?.cancel()
+        self.fetchMusicPlayListTask?.cancel()
         self.fetchMusicPlayListTask = musicPlayListService.fetchMusicPlayList { [weak self] result in
             guard let self else { return }
             switch result {
@@ -156,5 +179,43 @@ class MusicPlayListViewModel {
         guard currentlyPlayedMusicItem?.music.id == musicItem.music.id else { return }
         let seekTimeInSeconds = fraction * musicItem.music.duration
         musicPlayer.seek(to: CMTimeMakeWithSeconds(seekTimeInSeconds, preferredTimescale: 1000))
+    }
+    
+    @MainActor
+    func onAppDidEnterBackground() {
+        self.persistMusicItems()
+    }
+}
+
+
+extension MusicPlayListViewModel {
+    @MainActor
+    private func setupWithPersistedMusicItems() {
+        do {
+            let persistanceContainer = self.environment.persistanceContainer
+            guard let persistanceContainer else { return }
+            
+            let musicAssetsFetchDescriptor = FetchDescriptor<Persistables.MusicAsset>(sortBy: [SortDescriptor(\.id)])
+            let persistedMusicAssets = try persistanceContainer.mainContext.fetch(musicAssetsFetchDescriptor)
+            let musicAssets = persistedMusicAssets.map { persistedMusicAsset in
+                return MusicAsset(from: persistedMusicAsset)
+            }
+            
+            self.resetPlaylist(with: musicAssets)
+        } catch {
+            debugPrint("Error fetching music play list from persisted storage", error)
+        }
+    }
+    
+    @MainActor
+    private func persistMusicItems() {
+        guard let persistanceContainer = self.environment.persistanceContainer else { return }
+        let musicItemViewModels = self.musicItemViewModels
+        
+        musicItemViewModels.forEach { musicItem in
+            let persistableMusicModel = musicItem.music.buildPersistable()
+            persistanceContainer.mainContext.insert(persistableMusicModel)
+        }
+        persistanceContainer.mainContext.suppressedSave()
     }
 }

@@ -50,17 +50,21 @@ class MusicItemViewModel {
     weak var fileManager: BandPlayFileManager?
     private var downloadTrackerHandle: ResourceDownloaderService.TrackerHandle?
     
-    init(music: Music,
+    init(music: MusicAsset,
          resourceDownloaderService: ResourceDownloaderServicible,
-                  artworkImageLoaderService: ArtworkImageLoaderServicible,
+         artworkImageLoaderService: ArtworkImageLoaderServicible,
          fileManager: BandPlayFileManager,
          onActionTrigger: @escaping UITriggerAction) {
         self.artworkImageLoaderService = artworkImageLoaderService
         self.fileManager = fileManager
         self.actionTriggered = onActionTrigger
-        self.music = MusicAsset(model: music)
+        self.music = music
         self.resourceDownloaderService = resourceDownloaderService
         self.onStateChangeBroadcaster = Broadcaster()
+        
+        if let localFileURL = music.localFileURL {
+            self.prepareAVMusicAsset(from: localFileURL)
+        }
     }
     
     func trigger(action: ActionType) {
@@ -137,26 +141,31 @@ class MusicItemViewModel {
             self.trigger(action: .pause)
         }
         
-        let destinationFileURL = fileManager.documentsDirectoryURL.appending(path: suggestedFileName ?? "\(music.name).mp3")
+        let destinationFileURL = fileManager.musicAudioStorageDirectoryURL.appending(path: suggestedFileName ?? "\(music.name).mp3")
         do {
             try fileManager.copyFile(at: localURL, byCreatingIntermediateDirectoriesTo: destinationFileURL, shouldOverwrite: true)
-            let musicAsset = AVAsset(url: destinationFileURL)
-            
-            guard musicAsset.tracks.first?.mediaType == .audio else {
-                self.avAsset = nil
-                self.updateMusic(state: .failed(error: AppError.invalidMusicFile))
-                return
-            }
-            
-            self.avAsset = musicAsset
-            var duration = musicAsset.duration.seconds
-            duration = duration.isNaN ? 0 : duration
-            self.updateMusic(downloadedLocalFileURL: destinationFileURL, with: duration)
+            self.prepareAVMusicAsset(from: destinationFileURL)
         } catch {
             self.updateMusic(state: .failed(error: error))
             return
         }
     }
+    
+    func prepareAVMusicAsset(from localFile: URL) {
+        let musicAsset = AVAsset(url: localFile)
+                   
+        guard musicAsset.tracks.first?.mediaType == .audio else {
+            self.avAsset = nil
+            self.updateMusic(state: .failed(error: AppError.invalidMusicFile))
+            return
+        }
+       
+        self.avAsset = musicAsset
+        var duration = musicAsset.duration.seconds
+        duration = duration.isNaN ? 0 : duration
+        self.updateMusic(downloadedLocalFileURL: localFile, with: duration)
+    }
+
     
     func updateMusic(state: MusicAsset.Status) {
         var state = state
