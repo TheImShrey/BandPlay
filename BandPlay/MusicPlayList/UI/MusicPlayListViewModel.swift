@@ -216,6 +216,5 @@ extension MusicPlayListViewModel {
             let persistableMusicModel = musicItem.music.buildPersistable()
             persistanceContainer.mainContext.insert(persistableMusicModel)
         }
-        persistanceContainer.mainContext.suppressedSave()
     }
 }
